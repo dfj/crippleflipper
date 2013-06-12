@@ -2,21 +2,35 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 
 /*
- * Cripple a JAR or other zip file by flipping a bit in the first local file header signature.
+ * Cripple a JAR or other zip file by flipping a bit in the end of central directory record
  * This process can be reversed by flipping the bit back.
  * Useful for rendering JARs non-executable.
  */
 
 public class CrippleFlipper
 {
-	// The header value is little-endian 0x04034b50. The file can be crippled by setting it to 0x05034b50.
-	private void modifyFirstLocalFileHeaderSig(String fileName, byte val)
+	// The header value is little-endian 0x06054b50. The file can be crippled by setting it to 0x07054b50
+	private void modifyFirstLocalFileHeaderSig(String fileName, byte val, int sig1, int sig2)
 	{
                 try
                 {
                         RandomAccessFile raf = new RandomAccessFile(fileName, "rw");
-                        raf.seek(3);
-                        raf.write(new byte[]{val});
+			long filePos = raf.length();
+			boolean keepSeeking = true;
+			int readVal = 0;
+			int prevReadVal = 0;
+			while (keepSeeking)
+			{
+				filePos--;
+				raf.seek(filePos);
+				prevReadVal = readVal;
+				readVal = raf.read();
+				if (readVal == sig1 && prevReadVal == sig2)
+				{
+					raf.write(new byte[]{val});
+					keepSeeking = false;
+				}
+			}
                         raf.close();
                 }
                 catch (Exception ex)
@@ -27,14 +41,14 @@ public class CrippleFlipper
 
 	public void crippleFile(String fileName)
 	{
-		byte val = 5;
-		this.modifyFirstLocalFileHeaderSig(fileName, val);
+		byte val = 7;
+		this.modifyFirstLocalFileHeaderSig(fileName, val, 5, 6);
 	}
 
         public void unCrippleFile(String fileName)
         {
-                byte val = 4;
-                this.modifyFirstLocalFileHeaderSig(fileName, val);
+                byte val = 6;
+                this.modifyFirstLocalFileHeaderSig(fileName, val, 5, 7);
         }
 
 	public static void main(final String[] args) throws IOException
