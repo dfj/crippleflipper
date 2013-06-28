@@ -9,8 +9,8 @@ import java.io.RandomAccessFile;
 
 public class CrippleFlipper
 {
-	// The header value is little-endian 0x06054b50. The file can be crippled by setting it to 0x07054b50
-	private void modifyFirstLocalFileHeaderSig(String fileName, byte val, int sig1, int sig2)
+	// The end of central directory record value is little-endian 0x06054b50. The file can be crippled by setting it to 0x07054b50
+	private void modifyEndOfCentralDirSig(String fileName, byte val, int sig1, int sig2)
 	{
                 try
                 {
@@ -42,13 +42,13 @@ public class CrippleFlipper
 	public void crippleFile(String fileName)
 	{
 		byte val = 7;
-		this.modifyFirstLocalFileHeaderSig(fileName, val, 5, 6);
+		this.modifyEndOfCentralDirSig(fileName, val, 5, 6);
 	}
 
         public void unCrippleFile(String fileName)
         {
                 byte val = 6;
-                this.modifyFirstLocalFileHeaderSig(fileName, val, 5, 7);
+                this.modifyEndOfCentralDirSig(fileName, val, 5, 7);
         }
 
 	public static void main(final String[] args) throws IOException
